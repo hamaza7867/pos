@@ -287,6 +287,42 @@
         th { color: var(--muted); font-weight:600; font-size:0.875rem; }
         td:last-child { text-align: right; }
 
+        /* --- Modal Styles --- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background: var(--card);
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .modal-content h2 {
+            margin-top: 0;
+            color: var(--text);
+        }
+        .modal-content p {
+            color: var(--muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .modal-content .btn {
+            margin-top: 1rem;
+            width: 100%;
+            background-color: var(--primary);
+            color: #fff;
+        }
+
         /* ---################--- */
         /* --- PRINT STYLES --- */
         /* ---################--- */
@@ -494,6 +530,16 @@
         </div>
     </div>
 
+    <!-- Mobile Print Modal -->
+    <div id="mobile-print-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Receipt Ready</h2>
+            <p>Your receipt is ready to be printed.</p>
+            <p>Please use your browser's "Share" or "Print" option from the menu to print your receipt.</p>
+            <button id="close-print-modal" class="btn">Done</button>
+        </div>
+    </div>
+
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -544,6 +590,10 @@
         
         // Receipt (The hidden container)
         const receiptContainer = document.getElementById('receipt-container');
+
+        // Mobile Modal
+        const mobilePrintModal = document.getElementById('mobile-print-modal');
+        const closePrintModalBtn = document.getElementById('close-print-modal');
 
         // Settings Page
         const settingsForm = document.getElementById('settings-form');
@@ -927,22 +977,35 @@
             // 4. Inject HTML into the hidden container
             receiptContainer.innerHTML = receiptHtml;
 
-            // 5. Call print on the next animation frame
-            // This is the fix for the "blank page" / "loading" bug.
-            // It waits for the browser to be ready to "paint" the new HTML.
-            window.requestAnimationFrame(() => {
-                try {
-                    window.print();
-                } catch (e) {
-                    console.error("Print failed", e);
-                }
-            });
+            // 5. *** NEW LOGIC: Check for mobile ***
+            const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+
+            if (isMobile) {
+                // On mobile, don't call print(). Show a modal instead.
+                // The @media print CSS will still apply if they print manually.
+                mobilePrintModal.style.display = 'flex';
+            } else {
+                // On desktop, use the reliable requestAnimationFrame method
+                window.requestAnimationFrame(() => {
+                    try {
+                        window.print();
+                    } catch (e) {
+                        console.error("Print failed", e);
+                    }
+                });
+            }
         }
         
-        // This function runs *after* the print dialog is closed
+        // This function runs *after* the print dialog is closed OR when modal is closed
         function afterPrintActions() {
             handleClearCart(); // Clear the cart
             receiptContainer.innerHTML = ''; // Clear the receipt HTML
+        }
+
+        // New handler for the mobile modal "Done" button
+        function handleCloseMobileModal() {
+            mobilePrintModal.style.display = 'none';
+            afterPrintActions();
         }
 
 
@@ -1016,15 +1079,15 @@
 
 
         // --- ADD EVENT LISTENERS ---
-        tabRegister.addEventListener('click', handleTabSwitch);
-        tabInventory.addEventListener('click', handleTabSwitch);
-        tabSettings.addEventListener('click', handleTabSwitch);
+        tabRegister?.addEventListener('click', handleTabSwitch);
+        tabInventory?.addEventListener('click', handleTabSwitch);
+        tabSettings?.addEventListener('click', handleTabSwitch);
         
-        productForm.addEventListener('submit', handleSaveProduct);
-        inventoryTbody.addEventListener('click', handleDeleteProduct);
+        productForm?.addEventListener('submit', handleSaveProduct);
+        inventoryTbody?.addEventListener('click', handleDeleteProduct);
         
-        salesGrid.addEventListener('click', handleAddToCart);
-        productSearch.addEventListener('input', (e) => renderSalesGrid(e.target.value));
+        salesGrid?.addEventListener('click', handleAddToCart);
+        productSearch?.addEventListener('input', (e) => renderSalesGrid(e.target.value));
         
         // Search focus shortcut
         document.addEventListener('keydown', (e) => {
@@ -1034,18 +1097,19 @@
             }
         });
         
-        cartItemsContainer.addEventListener('click', handleCartQtyChange);
-        clearCartButton.addEventListener('click', handleClearCart);
-        payButton.addEventListener('click', handlePrintReceipt);
+        cartItemsContainer?.addEventListener('click', handleCartQtyChange);
+        clearCartButton?.addEventListener('click', handleClearCart);
+        payButton?.addEventListener('click', handlePrintReceipt);
+        closePrintModalBtn?.addEventListener('click', handleCloseMobileModal); // Add this listener
         
         // Settings listeners
-        settingsForm.addEventListener('submit', handleSaveSettings);
-        toggleThemeBtn.addEventListener('click', handleToggleTheme);
-        exportJsonBtn.addEventListener('click', exportDataJSON);
-        exportCsvBtn.addEventListener('click', exportDataCSV);
-        importFileEl.addEventListener('change', importDataJSON);
+        settingsForm?.addEventListener('submit', handleSaveSettings);
+        toggleThemeBtn?.addEventListener('click', handleToggleTheme);
+        exportJsonBtn?.addEventListener('click', exportDataJSON);
+        exportCsvBtn?.addEventListener('click', exportDataCSV);
+        importFileEl?.addEventListener('change', importDataJSON);
 
-        // This is the reliable way to clear the cart AFTER printing
+        // This is the reliable way to clear the cart AFTER printing (on desktop)
         window.onafterprint = afterPrintActions;
 
         // --- INITIAL LOAD ---
