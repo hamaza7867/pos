@@ -214,6 +214,12 @@
             color: var(--text);
         }
         
+        .btn-red {
+            padding: 0.6rem 1rem;
+            background: var(--danger);
+            color: #ffffff;
+        }
+
         .btn-red-small {
             padding: 0.25rem 0.75rem;
             font-size: 0.875rem;
@@ -315,6 +321,7 @@
             color: var(--muted);
             font-size: 0.95rem;
             line-height: 1.5;
+            margin-bottom: 1.5rem;
         }
         .modal-content .btn {
             margin-top: 1rem;
@@ -322,6 +329,22 @@
             background-color: var(--primary);
             color: #fff;
         }
+        /* New styles for confirm modal */
+        .modal-buttons {
+            display: flex;
+            gap: 0.75rem;
+            flex-direction: column;
+        }
+        @media(min-width: 640px) {
+            .modal-buttons {
+                flex-direction: row;
+            }
+        }
+        .modal-buttons .btn {
+            width: 100%;
+            margin-top: 0;
+        }
+
 
         /* ---################--- */
         /* --- PRINT STYLES --- */
@@ -329,13 +352,18 @@
 
         /* This is the hidden container for our receipt */
         .printable-receipt-container {
-            display: none;
+            display: none; /* Hidden by default, JS will toggle this */
         }
 
         @media print {
             /* Hide the entire website */
-            body * {
+            body > :not(.printable-receipt-container) {
                 visibility: hidden;
+            }
+
+            /* Hide the modal when printing */
+            .modal-overlay {
+                display: none !important;
             }
             
             /* Show *only* the receipt container and its contents */
@@ -345,6 +373,7 @@
             
             /* Move the receipt to the top left of the print page */
             .printable-receipt-container {
+                display: block !important; /* Ensure it's visible */
                 position: absolute;
                 left: 0;
                 top: 0;
@@ -540,6 +569,18 @@
         </div>
     </div>
 
+    <!-- NEW: Confirmation Modal -->
+    <div id="confirm-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="confirm-modal-title">Are you sure?</h2>
+            <p id="confirm-modal-message">This action cannot be undone.</p>
+            <div class="modal-buttons">
+                <button id="confirm-modal-cancel" class="btn btn-gray">Cancel</button>
+                <button id="confirm-modal-confirm" class="btn btn-red">Confirm</button>
+            </div>
+        </div>
+    </div>
+
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -548,6 +589,7 @@
         let products = [];
         let cart = [];
         let settings = {};
+        let confirmCallback = null; // Store the confirm action
         
         const DEFAULT_SETTINGS = {
             shopName: "My Web POS",
@@ -594,6 +636,14 @@
         // Mobile Modal
         const mobilePrintModal = document.getElementById('mobile-print-modal');
         const closePrintModalBtn = document.getElementById('close-print-modal');
+
+        // NEW: Confirm Modal
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmModalTitle = document.getElementById('confirm-modal-title');
+        const confirmModalMessage = document.getElementById('confirm-modal-message');
+        const confirmModalConfirmBtn = document.getElementById('confirm-modal-confirm');
+        const confirmModalCancelBtn = document.getElementById('confirm-modal-cancel');
+
 
         // Settings Page
         const settingsForm = document.getElementById('settings-form');
@@ -785,6 +835,26 @@
             applyTheme(newTheme);
             saveSettings(); // Save the new theme setting
         }
+        
+        // --- NEW: MODAL FUNCTIONS ---
+        function showConfirmModal(title, message, onConfirm) {
+            confirmModalTitle.textContent = title;
+            confirmModalMessage.textContent = message;
+            confirmCallback = onConfirm; // Store the action
+            confirmModal.style.display = 'flex';
+        }
+
+        function hideConfirmModal() {
+            confirmModal.style.display = 'none';
+            confirmCallback = null; // Clear the action
+        }
+
+        function handleConfirm() {
+            if (typeof confirmCallback === 'function') {
+                confirmCallback(); // Execute the stored action
+            }
+            hideConfirmModal();
+        }
 
 
         // --- EVENT HANDLERS ---
@@ -847,13 +917,12 @@
             if (!e.target.classList.contains('delete-btn')) return;
             const sku = e.target.dataset.sku;
             
-            if (!confirm(`Are you sure you want to delete product SKU: ${sku}?`)) {
-                return;
-            }
-
-            products = products.filter(p => p.sku !== sku);
-            saveProducts(products);
-            refreshAllUI();
+            // Use NEW modal
+            showConfirmModal("Delete Product", `Are you sure you want to delete product SKU: ${sku}?`, () => {
+                products = products.filter(p => p.sku !== sku);
+                saveProducts(products);
+                refreshAllUI();
+            });
         }
         
         function handleAddToCart(e) {
@@ -896,13 +965,17 @@
         }
         
         function handleClearCart() {
-            if (cart.length > 0 && confirm("Are you sure you want to clear the cart?")) {
+            if (cart.length === 0) {
                 cart = [];
                 renderCart();
-            } else if (cart.length === 0) {
-                cart = [];
-                renderCart();
+                return;
             }
+            
+            // Use NEW modal
+            showConfirmModal("Clear Cart", "Are you sure you want to clear the current cart?", () => {
+                cart = [];
+                renderCart();
+            });
         }
 
         function handleSaveSettings(e) {
@@ -926,7 +999,15 @@
         
         // --- NEW PRINT RECEIPT LOGIC (Mobile Friendly) ---
         function handlePrintReceipt() {
-            if (cart.length === 0) return alert('Cart is empty.');
+            if (cart.length === 0) {
+                // Use new modal for alerts too
+                showConfirmModal("Empty Cart", "Cannot print a receipt for an empty cart.", () => {});
+                // Make the confirm button primary instead of danger
+                confirmModalConfirmBtn.className = "btn btn-primary"; // (need to add .btn-primary)
+                // For now, just use alert
+                alert('Cart is empty.');
+                return;
+            }
 
             // 1. Calculate totals
             let subtotal = 0;
@@ -981,9 +1062,11 @@
             const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
             if (isMobile) {
-                // On mobile, don't call print(). Show a modal instead.
-                // The @media print CSS will still apply if they print manually.
-                mobilePrintModal.style.display = 'flex';
+                // On mobile, don't call print().
+                // Instead: 1. Hide app, 2. Show receipt, 3. Show modal
+                appRoot.style.display = 'none'; // Hide the main app
+                receiptContainer.style.display = 'block'; // Show the receipt
+                mobilePrintModal.style.display = 'flex'; // Show the modal
             } else {
                 // On desktop, use the reliable requestAnimationFrame method
                 window.requestAnimationFrame(() => {
@@ -998,7 +1081,14 @@
         
         // This function runs *after* the print dialog is closed OR when modal is closed
         function afterPrintActions() {
-            handleClearCart(); // Clear the cart
+            // Restore UI (for mobile flow)
+            appRoot.style.display = 'block';
+            receiptContainer.style.display = 'none';
+            
+            // Clear cart (no confirmation needed here)
+            cart = [];
+            renderCart();
+            
             receiptContainer.innerHTML = ''; // Clear the receipt HTML
         }
 
@@ -1057,8 +1147,9 @@
                     if (!importedData.products || !importedData.settings) {
                         throw new Error("Invalid backup file format.");
                     }
-
-                    if (confirm('Importing this file will overwrite all current products AND settings. Continue?')) {
+                    
+                    // Use NEW modal
+                    showConfirmModal("Import Data", "This will overwrite all current products AND settings. Continue?", () => {
                         saveProducts(importedData.products);
                         settings = { ...DEFAULT_SETTINGS, ...importedData.settings };
                         saveSettings();
@@ -1067,7 +1158,8 @@
                         // Full UI refresh
                         updateSettingsUI();
                         refreshAllUI();
-                    }
+                    });
+
                 } catch (error) {
                     alert(`Error: ${error.message}`);
                 }
@@ -1100,7 +1192,11 @@
         cartItemsContainer?.addEventListener('click', handleCartQtyChange);
         clearCartButton?.addEventListener('click', handleClearCart);
         payButton?.addEventListener('click', handlePrintReceipt);
-        closePrintModalBtn?.addEventListener('click', handleCloseMobileModal); // Add this listener
+        closePrintModalBtn?.addEventListener('click', handleCloseMobileModal);
+        
+        // NEW: Confirm modal listeners
+        confirmModalCancelBtn?.addEventListener('click', hideConfirmModal);
+        confirmModalConfirmBtn?.addEventListener('click', handleConfirm);
         
         // Settings listeners
         settingsForm?.addEventListener('submit', handleSaveSettings);
