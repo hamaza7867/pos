@@ -927,16 +927,16 @@
             // 4. Inject HTML into the hidden container
             receiptContainer.innerHTML = receiptHtml;
 
-            // 5. Call print after a short delay
-            // This ensures the DOM is updated before the print dialog opens.
+            // 5. Call print on the next animation frame
             // This is the fix for the "blank page" / "loading" bug.
-            setTimeout(() => {
+            // It waits for the browser to be ready to "paint" the new HTML.
+            window.requestAnimationFrame(() => {
                 try {
                     window.print();
                 } catch (e) {
                     console.error("Print failed", e);
                 }
-            }, 50); // 50ms delay is usually enough for render
+            });
         }
         
         // This function runs *after* the print dialog is closed
