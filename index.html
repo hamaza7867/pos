@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS System (LocalStorage)</title>
+    <link rel="icon" type="image/png" href="https://placehold.co/32x32/2563eb/ffffff?text=P&font=sans-serif">
+    <style>
+        /* --- Global Styles --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f3f4f6; /* gray-100 */
+            margin: 0;
+            padding: 1rem; /* p-4 for mobile */
+            color: #1f2937; /* gray-800 */
+            min-height: 100vh;
+        }
+
+        @media (min-width: 640px) { /* sm: */
+            body {
+                padding: 2rem; /* p-8 for desktop */
+            }
+        }
+        
+        /* --- Layout --- */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 1.5rem; /* mb-6 */
+        }
+        
+        .header h1 {
+            font-size: 1.5rem; /* text-2xl for mobile */
+            font-weight: bold;
+        }
+
+        @media (min-width: 640px) { /* sm: */
+            .header h1 {
+                font-size: 2.25rem; /* text-4xl for desktop */
+            }
+        }
+
+        .tab-nav {
+            display: flex;
+            gap: 1rem; /* space-x-4 */
+            border-bottom: 1px solid #d1d5db; /* border-gray-300 */
+            margin-bottom: 1.5rem; /* mb-6 */
+            overflow-x: auto; /* Allow horizontal scroll on mobile */
+            white-space: nowrap; /* Prevent tabs from wrapping */
+        }
+
+        .tab-nav button {
+            padding: 0.75rem 1rem; /* py-3 px-4 */
+            font-weight: 600; /* font-semibold */
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            color: #4b5563; /* text-gray-600 */
+            flex-shrink: 0; /* Prevent tabs from shrinking */
+        }
+
+        .tab-nav button.active {
+            color: #2563eb; /* text-blue-600 */
+            border-bottom-color: #2563eb; /* border-blue-600 */
+        }
+
+        .tab-content {
+            display: none; /* Hidden by default */
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .register-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem; /* gap-6 */
+        }
+
+        @media (min-width: 1024px) { /* lg: */
+            .register-layout {
+                grid-template-columns: 2fr 1fr; /* lg:grid-cols-3 */
+            }
+        }
+
+        /* --- Components --- */
+        .card {
+            background-color: #ffffff;
+            padding: 1rem; /* p-4 for mobile */
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+        }
+        
+        @media (min-width: 640px) { /* sm: */
+            .card {
+                padding: 1.5rem; /* p-6 for desktop */
+            }
+        }
+
+        .sticky-cart {
+            position: sticky;
+            top: 1.5rem; /* sticky top-6 */
+        }
+
+        h2 {
+            font-size: 1.25rem; /* text-xl for mobile */
+            font-weight: bold;
+            margin-top: 0;
+            margin-bottom: 1rem; /* mb-4 */
+        }
+        
+        @media (min-width: 640px) { /* sm: */
+            h2 {
+                font-size: 1.5rem; /* text-2xl for desktop */
+            }
+        }
+        
+        h3 {
+            font-size: 1.125rem; /* text-lg for mobile */
+            font-weight: 600; /* font-semibold */
+            margin-bottom: 0.75rem; /* mb-3 */
+        }
+        
+        @media (min-width: 640px) { /* sm: */
+            h3 {
+                font-size: 1.25rem; /* text-xl for desktop */
+            }
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select { /* Added select for settings */
+            width: 100%;
+            padding: 0.5rem 0.75rem; /* p-2 */
+            border: 1px solid #d1d5db; /* border-gray-300 */
+            border-radius: 0.375rem; /* rounded-md */
+            box-sizing: border-box; /* To include padding in width */
+            font-size: 1rem; /* Ensure mobile zoom doesn't trigger */
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem; /* gap-4 */
+            margin-bottom: 1.5rem; /* mb-6 */
+            padding-bottom: 1.5rem; /* pb-6 */
+            border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
+        }
+
+        @media (min-width: 768px) { /* md: */
+            .form-grid {
+                grid-template-columns: repeat(3, 1fr); /* md:grid-cols-3 */
+            }
+        }
+
+        button {
+            font-weight: 600; /* font-semibold */
+            border-radius: 0.375rem; /* rounded-md */
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: none;
+            -webkit-appearance: none; /* Fix for mobile Safari styling */
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem 1rem; /* p-3 */
+            color: #ffffff;
+            background-color: #2563eb; /* bg-blue-600 */
+        }
+        .btn:hover { background-color: #1d4ed8; /* hover:bg-blue-700 */ }
+        
+        .btn-green {
+            width: 100%;
+            font-size: 1.125rem; /* text-lg */
+            padding: 1rem; /* p-4 */
+            color: #ffffff;
+            background-color: #16a34a; /* bg-green-600 */
+        }
+        .btn-green:hover { background-color: #15803d; /* hover:bg-green-700 */ }
+        .btn-green:disabled { background-color: #9ca3af; /* disabled:bg-gray-400 */ }
+
+        .btn-gray {
+            width: 100%;
+            padding: 0.5rem; /* p-2 */
+            margin-top: 0.5rem; /* mt-2 */
+            color: #374151; /* text-gray-700 */
+            background-color: #e5e7eb; /* bg-gray-200 */
+        }
+        .btn-gray:hover { background-color: #d1d5db; /* hover:bg-gray-300 */ }
+
+        .btn-red-small {
+            background-color: #dc2626; /* bg-red-600 */
+            color: #ffffff;
+            padding: 0.25rem 0.75rem; /* px-3 py-1 */
+            font-size: 0.875rem; /* text-sm */
+        }
+        .btn-red-small:hover { background-color: #b91c1c; /* hover:bg-red-700 */ }
+
+        .btn-blue-small {
+            background-color: #2563eb; /* bg-blue-600 */
+            color: #ffffff;
+            padding: 0.25rem 0.75rem; /* px-3 py-1 */
+            font-size: 0.875rem; /* text-sm */
+        }
+        .btn-blue-small:hover { background-color: #1d4ed8; /* hover:bg-blue-700 */ }
+
+
+        /* --- Table --- */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            min-width: 400px;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 0.75rem; /* p-3 */
+            text-align: left;
+        }
+        th {
+            background-color: #f9fafb; /* bg-gray-100 */
+        }
+        tbody tr {
+            border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
+        }
+        td:last-child {
+            text-align: right;
+        }
+        
+        /* --- Sales Grid --- */
+        .sales-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* grid-cols-2 */
+            gap: 1rem; /* gap-4 */
+        }
+        @media (min-width: 640px) { /* sm: */
+            .sales-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (min-width: 768px) { /* md: */
+            .sales-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+        @media (min-width: 1280px) { /* xl: */
+            .sales-grid { grid-template-columns: repeat(6, 1fr); }
+        }
+
+        .product-card {
+            padding: 0.75rem; /* p-3 */
+            border: 1px solid #d1d5db; /* border-gray-300 */
+            border-radius: 0.5rem; /* rounded-lg */
+            text-align: left;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .product-card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* hover:shadow-lg */
+            border-color: #2563eb; /* hover:border-blue-500 */
+        }
+        .product-card span { display: block; }
+        .product-card .name { font-weight: 600; /* font-semibold */ color: #1f2937; /* text-gray-800 */ }
+        .product-card .price { color: #2563eb; /* text-blue-600 */ }
+        
+        /* New List View style for Sales Grid */
+        .sales-grid-list-view {
+            grid-template-columns: 1fr; /* 1-column list */
+        }
+        .sales-grid-list-view .product-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+            padding: 1rem; /* p-4 */
+        }
+        .sales-grid-list-view .product-card .name {
+            font-size: 1.125rem; /* text-lg */
+        }
+        .sales-grid-list-view .product-card .price {
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 600;
+        }
+
+        /* --- Cart --- */
+        .cart-items {
+            max-height: 16rem; /* max-h-64 */
+            overflow-y: auto;
+            margin-bottom: 1rem; /* mb-4 */
+            border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
+        }
+        .cart-item {
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0; /* py-3 */
+            border-bottom: 1px solid #f3f4f6; /* border-gray-100 */
+            gap: 0.5rem; /* gap-2 */
+        }
+        .cart-item > div:first-child { /* Name/Price container */
+            flex-grow: 1;
+        }
+        .cart-item .name { font-weight: 600; /* font-semibold */ }
+        .cart-item .price { font-size: 0.875rem; /* text-sm */ color: #4b5563; /* text-gray-600 */ }
+        .cart-item .total { 
+            font-weight: 600; /* font-semibold */ 
+            flex-basis: 100%; /* Take full width on new line */
+            text-align: right;
+            margin-top: 0.25rem; /* mt-1 */
+        }
+        
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem; /* gap-2 */
+            flex-shrink: 0; /* Don't shrink qty controls */
+        }
+        .qty-btn {
+            background-color: #e5e7eb; /* bg-gray-200 */
+            width: 1.5rem; /* w-6 */
+            height: 1.5rem; /* h-6 */
+            border-radius: 9999px; /* rounded-full */
+            font-weight: bold;
+            padding: 0;
+            line-height: 1.5rem;
+        }
+
+        .totals {
+            display: grid;
+            gap: 0.5rem; /* space-y-2 */
+            margin-bottom: 1rem; /* mb-4 */
+        }
+        .totals div {
+            display: flex;
+            justify-content: space-between;
+        }
+        .totals .total-row {
+            font-size: 1.25rem; /* text-xl */
+            font-weight: bold;
+            color: #111827; /* text-gray-900 */
+        }
+
+        /* --- Receipt Styles --- */
+        /* REMOVED: .printable-receipt-container and @media print styles are no longer needed */
+        
+    </style>
+</head>
+<body>
+
+    <!-- ======== HIDDEN RECEIPT TEMPLATE ======== -->
+    <!-- REMOVED: This entire div is no longer needed. -->
+    
+    <!-- ======== MAIN POS INTERFACE ======== -->
+    <div class="container">
+        <header class="header">
+            <h1>POS System (LocalStorage)</h1>
+        </header>
+
+        <nav class="tab-nav">
+            <button id="tab-register" class="active">Sales Register</button>
+            <button id="tab-inventory">Inventory Management</button>
+            <button id="tab-settings">Settings</button>
+        </nav>
+
+        <!-- --- Tab Content: Register --- -->
+        <div id="content-register" class="tab-content active">
+            <div class="register-layout">
+                <div class="card">
+                    <h2>Sales Register</h2>
+                    <div class="sales-grid" id="sales-grid">
+                        <!-- Products will be loaded here by JS -->
+                    </div>
+                </div>
+                
+                <div class="card sticky-cart">
+                    <h2>Current Sale</h2>
+                    <div class="cart-items" id="cart-items">
+                        <p style="color: #6b7280; padding: 1rem 0;">Cart is empty.</p>
+                    </div>
+                    
+                    <div class="totals">
+                        <div>
+                            <span>Subtotal:</span>
+                            <span id="cart-subtotal">PKR 0.00</span>
+                        </div>
+                        <div>
+                            <span>Tax (<span id="cart-tax-rate-label">5</span>%):</span>
+                            <span id="cart-tax">PKR 0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Total:</span>
+                            <span id="cart-total">PKR 0.00</span>
+                        </div>
+                    </div>
+                    
+                    <button id="pay-button" class="btn-green" disabled>Pay & Print Receipt</button>
+                    <button id="clear-cart-button" class="btn-gray">Clear Cart</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- --- Tab Content: Inventory --- -->
+        <div id="content-inventory" class="tab-content">
+            <div class="card">
+                <h2>Inventory Management</h2>
+                <form id="add-product-form" class="form-grid">
+                    <input type="text" id="product-name" placeholder="Product Name" required>
+                    <input type="number" id="product-price" placeholder="Price" min="0" step="0.01" required>
+                    <input type="text" id="product-sku" placeholder="SKU / Barcode (Optional)">
+                    <button type="submit" class="btn">Save Product</button>
+                </form>
+    
+                <h3>Product List</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>SKU</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-tbody">
+                            <!-- Inventory will be loaded here by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- --- Tab Content: Settings --- -->
+        <div id="content-settings" class="tab-content">
+            <div class="card">
+                <h2>Settings</h2>
+                
+                <form id="settings-form">
+                    <h3>Receipt Settings</h3>
+                    <div class="form-grid">
+                        <input type="text" id="setting-shop-name" placeholder="Shop Name">
+                        <input type="text" id="setting-shop-address" placeholder="Shop Address">
+                        <input type="text" id="setting-shop-phone" placeholder="Shop Phone">
+                    </div>
+                    <input type="text" id="setting-footer-note" placeholder="Receipt Footer Note" style="width: 100%; margin-bottom: 1.5rem;">
+
+                    <h3>POS Settings</h3>
+                    <div class="form-grid">
+                        <div>
+                            <label for="setting-tax-rate">Tax Rate (%)</label>
+                            <input type="number" id="setting-tax-rate" min="0" step="0.1" value="5">
+                        </div>
+                        <div>
+                            <label for="setting-layout">Sales Layout</label>
+                            <select id="setting-layout" style="width:100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 1rem;">
+                                <option value="grid">Grid View</option>
+                                <option value="list">List View</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn">Save Settings</button>
+                </form>
+
+                <hr style="margin: 1.5rem 0;">
+
+                <h3>Data Management</h3>
+                <!-- This .form-grid will be 1 column on mobile, 3 on desktop -->
+                <div class="form-grid" style="border: none; padding: 0; margin-bottom: 0;">
+                    <button id="export-json-btn" class="btn-gray">Export Backup (JSON)</button>
+                    <button id="export-csv-btn" class="btn-gray">Export Report (CSV)</button>
+                    <div>
+                        <label for="import-file">Import Backup (JSON):</label>
+                        <input type="file" id="import-file" accept=".json" style="padding: 0.25rem 0;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        
+        // --- STATE ---
+        let products = [];
+        let cart = [];
+        let settings = {};
+        
+        const DEFAULT_SETTINGS = {
+            shopName: "My Web POS",
+            shopAddress: "123 Coding Street, Tech City",
+            shopPhone: "",
+            footerNote: "Thank you for your business!",
+            taxRate: 5.0,
+            layout: "grid"
+        };
+
+        // --- DOM SELECTORS ---
+        const tabRegister = document.getElementById('tab-register');
+        const tabInventory = document.getElementById('tab-inventory');
+        const tabSettings = document.getElementById('tab-settings');
+        const contentRegister = document.getElementById('content-register');
+        const contentInventory = document.getElementById('content-inventory');
+        const contentSettings = document.getElementById('content-settings');
+        
+        // Inventory Page
+        const productForm = document.getElementById('add-product-form');
+        const productNameInput = document.getElementById('product-name');
+        const productPriceInput = document.getElementById('product-price');
+        const productSkuInput = document.getElementById('product-sku');
+        const inventoryTbody = document.getElementById('inventory-tbody');
+        
+        // Register Page
+        const salesGrid = document.getElementById('sales-grid');
+        
+        // Cart
+        const cartItemsContainer = document.getElementById('cart-items');
+        const cartSubtotalEl = document.getElementById('cart-subtotal');
+        const cartTaxEl = document.getElementById('cart-tax');
+        const cartTotalEl = document.getElementById('cart-total');
+        const cartTaxRateLabel = document.getElementById('cart-tax-rate-label');
+        const payButton = document.getElementById('pay-button');
+        const clearCartButton = document.getElementById('clear-cart-button');
+        
+        // Receipt
+        // REMOVED: All 'receipt-*' element selectors are no longer needed
+        // const receiptItemsTbody = document.getElementById('receipt-items-tbody');
+        // ...etc...
+
+        // Settings Page
+        const settingsForm = document.getElementById('settings-form');
+        const settingShopName = document.getElementById('setting-shop-name');
+        const settingShopAddress = document.getElementById('setting-shop-address');
+        const settingShopPhone = document.getElementById('setting-shop-phone');
+        const settingFooterNote = document.getElementById('setting-footer-note');
+        const settingTaxRate = document.getElementById('setting-tax-rate');
+        const settingLayout = document.getElementById('setting-layout');
+        const exportJsonBtn = document.getElementById('export-json-btn');
+        const exportCsvBtn = document.getElementById('export-csv-btn');
+        const importFileEl = document.getElementById('import-file');
+
+
+        // --- LOCALSTORAGE FUNCTIONS ---
+        
+        function getProducts() {
+            try {
+                const prods = localStorage.getItem('products');
+                return prods ? JSON.parse(prods) : [];
+            } catch (e) {
+                console.error("Error parsing products from localStorage", e);
+                return [];
+            }
+        }
+
+        function saveProducts(productsToSave) {
+            try {
+                localStorage.setItem('products', JSON.stringify(productsToSave));
+            } catch (e) {
+                console.error("Error saving products to localStorage", e);
+            }
+        }
+
+        function loadSettings() {
+            let savedSettings = {};
+            try {
+                savedSettings = JSON.parse(localStorage.getItem('posSettings')) || {};
+            } catch (e) {
+                console.error("Error parsing settings", e);
+                savedSettings = {};
+            }
+            // Merge defaults with saved settings to ensure no settings are missing
+            settings = { ...DEFAULT_SETTINGS, ...savedSettings };
+            saveSettings(); // Save merged settings back
+        }
+
+        function saveSettings() {
+            try {
+                localStorage.setItem('posSettings', JSON.stringify(settings));
+            } catch (e) {
+                console.error("Error saving settings", e);
+            }
+        }
+        
+        // --- RENDER FUNCTIONS ---
+        
+        function renderInventoryList() {
+            inventoryTbody.innerHTML = '';
+            if (products.length === 0) {
+                inventoryTbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No products in inventory.</td></tr>';
+                return;
+            }
+            
+            products.forEach(product => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${product.name}</td>
+                    <td>PKR ${product.price.toFixed(2)}</td>
+                    <td>${product.sku}</td>
+                    <td>
+                        <button class="btn-red-small delete-btn" data-sku="${product.sku}">Delete</button>
+                    </td>
+                `;
+                inventoryTbody.appendChild(row);
+            });
+        }
+        
+        function renderSalesGrid() {
+            salesGrid.innerHTML = '';
+            if (products.length === 0) {
+                salesGrid.innerHTML = '<p>No products found. Please add items to inventory.</p>';
+                return;
+            }
+            
+            // Apply layout setting
+            if (settings.layout === 'list') {
+                salesGrid.classList.add('sales-grid-list-view');
+            } else {
+                salesGrid.classList.remove('sales-grid-list-view');
+            }
+
+            products.forEach(product => {
+                const card = document.createElement('button');
+                card.className = 'product-card';
+                card.dataset.sku = product.sku;
+                card.innerHTML = `
+                    <span class="name">${product.name}</span>
+                    <span class="price">PKR ${product.price.toFixed(2)}</span>
+                `;
+                salesGrid.appendChild(card);
+            });
+        }
+        
+        function renderCart() {
+            cartItemsContainer.innerHTML = '';
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = '<p style="color: #6b7280; padding: 1rem 0;">Cart is empty.</p>';
+                payButton.disabled = true;
+                updateTotals(0, 0, 0);
+                return;
+            }
+            
+            let subtotal = 0;
+            cart.forEach(item => {
+                const itemTotal = item.price * item.qty;
+                subtotal += itemTotal;
+                
+                const cartItem = document.createElement('div');
+                cartItem.className = 'cart-item';
+                cartItem.innerHTML = `
+                    <div>
+                        <p class="name">${item.name}</p>
+                        <p class="price">PKR ${item.price.toFixed(2)}</p>
+                    </div>
+                    <div class="qty-controls">
+                        <button class="qty-btn" data-sku="${item.sku}" data-action="decrement">-</button>
+                        <span>${item.qty}</span>
+                        <button class="qty-btn" data-sku="${item.sku}" data-action="increment">+</button>
+                    </div>
+                    <p class="total">PKR ${itemTotal.toFixed(2)}</p>
+                `;
+                cartItemsContainer.appendChild(cartItem);
+            });
+            
+            const tax = subtotal * (settings.taxRate / 100);
+            const total = subtotal + tax;
+            updateTotals(subtotal, tax, total);
+            payButton.disabled = false;
+        }
+        
+        function updateTotals(subtotal, tax, total) {
+            cartSubtotalEl.textContent = `PKR ${subtotal.toFixed(2)}`;
+            cartTaxEl.textContent = `PKR ${tax.toFixed(2)}`;
+            cartTotalEl.textContent = `PKR ${total.toFixed(2)}`;
+            cartTaxRateLabel.textContent = settings.taxRate;
+            
+            // Update receipt totals as well
+            // THIS WAS THE BUG. We remove this so renderCart() doesn't clear the receipt.
+            // receiptSubtotalEl.textContent = `PKR ${subtotal.toFixed(2)}`;
+            // receiptTaxEl.textContent = `PKR ${tax.toFixed(2)}`;
+            // receiptTotalEl.textContent = `PKR ${total.toFixed(2)}`;
+            // receiptTaxRate.textContent = settings.taxRate;
+        }
+
+        function updateSettingsUI() {
+            settingShopName.value = settings.shopName;
+            settingShopAddress.value = settings.shopAddress;
+            settingShopPhone.value = settings.shopPhone;
+            settingFooterNote.value = settings.footerNote;
+            settingTaxRate.value = settings.taxRate;
+            settingLayout.value = settings.layout;
+        }
+        
+        function refreshAllUI() {
+            products = getProducts();
+            renderInventoryList();
+            renderSalesGrid();
+            renderCart();
+        }
+        
+        // --- UTIL ---
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return '';
+            return str.replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[m]);
+        }
+
+        // --- EVENT HANDLERS ---
+        
+        function handleTabSwitch(e) {
+            const selectedTab = e.target.id;
+            
+            // Hide all content
+            contentRegister.classList.remove('active');
+            contentInventory.classList.remove('active');
+            contentSettings.classList.remove('active');
+            // Deactivate all tabs
+            tabRegister.classList.remove('active');
+            tabInventory.classList.remove('active');
+            tabSettings.classList.remove('active');
+
+            if (selectedTab === 'tab-register') {
+                tabRegister.classList.add('active');
+                contentRegister.classList.add('active');
+            } else if (selectedTab === 'tab-inventory') {
+                tabInventory.classList.add('active');
+                contentInventory.classList.add('active');
+            } else if (selectedTab === 'tab-settings') {
+                tabSettings.classList.add('active');
+                contentSettings.classList.add('active');
+            }
+        }
+        
+        function handleSaveProduct(e) {
+            e.preventDefault();
+            const name = productNameInput.value;
+            const price = parseFloat(productPriceInput.value);
+            let sku = productSkuInput.value; // Changed to let
+            
+            if (!name || !price) {
+                alert("Product Name and Price are required."); // Check only name and price
+                return;
+            }
+
+            // If SKU is empty, generate a unique one
+            if (!sku) {
+                sku = 'item-' + Date.now();
+            }
+            
+            const newProduct = { name, price, sku };
+            const existingIndex = products.findIndex(p => p.sku === sku);
+            
+            if (existingIndex > -1) {
+                products[existingIndex] = newProduct;
+            } else {
+                products.push(newProduct);
+            }
+            
+            saveProducts(products);
+            refreshAllUI();
+            productForm.reset();
+        }
+        
+        function handleDeleteProduct(e) {
+            if (!e.target.classList.contains('delete-btn')) return;
+            const sku = e.target.dataset.sku;
+            
+            products = products.filter(p => p.sku !== sku);
+            saveProducts(products);
+            refreshAllUI();
+        }
+        
+        function handleAddToCart(e) {
+            const card = e.target.closest('.product-card');
+            if (!card) return;
+            
+            const sku = card.dataset.sku;
+            const product = products.find(p => p.sku === sku);
+            
+            const cartItem = cart.find(item => item.sku === sku);
+            if (cartItem) {
+                cartItem.qty += 1;
+            } else {
+                cart.push({ ...product, qty: 1 });
+            }
+            
+            renderCart();
+        }
+        
+        function handleCartQtyChange(e) {
+            if (!e.target.classList.contains('qty-btn')) return;
+            
+            const sku = e.target.dataset.sku;
+            const action = e.target.dataset.action;
+            const cartItem = cart.find(item => item.sku === sku);
+            
+            if (!cartItem) return;
+            
+            if (action === 'increment') {
+                cartItem.qty += 1;
+            } else if (action === 'decrement') {
+                if (cartItem.qty === 1) {
+                    cart = cart.filter(item => item.sku !== sku);
+                } else {
+                    cartItem.qty -= 1;
+                }
+            }
+            
+            renderCart();
+        }
+        
+        function handleClearCart() {
+            cart = [];
+            renderCart();
+        }
+
+        function handleSaveSettings(e) {
+            e.preventDefault();
+            settings.shopName = settingShopName.value;
+            settings.shopAddress = settingShopAddress.value;
+            settings.shopPhone = settingShopPhone.value;
+            settings.footerNote = settingFooterNote.value;
+            settings.taxRate = parseFloat(settingTaxRate.value) || 0;
+            settings.layout = settingLayout.value;
+            
+            saveSettings();
+            alert("Settings saved!");
+
+            // Re-render UI elements that depend on settings
+            renderSalesGrid();
+            renderCart(); // This will update tax
+        }
+        
+        // --- NEW PRINT RECEIPT LOGIC ---
+        function handlePrintReceipt() {
+            if (cart.length === 0) return alert('Cart is empty.');
+
+            // 1. Calculate totals
+            let subtotal = 0;
+            cart.forEach(i => subtotal += i.price * i.qty);
+            const tax = subtotal * (settings.taxRate / 100);
+            const total = subtotal + tax;
+
+            // 2. Build receipt items HTML string
+            const itemsHtml = cart.map(item => `
+                <tr>
+                    <td>${escapeHtml(item.name)}</td>
+                    <td class"col-qty">${item.qty}</td>
+                    <td class="col-total">PKR ${(item.price * item.qty).toFixed(2)}</td>
+                </tr>
+            `).join('');
+
+            // 3. Build the full receipt HTML document
+            const receiptHtml = `
+                <!doctype html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <title>Receipt</title>
+                    <meta name="viewport" content="width=device-width,initial-scale=1">
+                    <style>
+                        body { 
+                            font-family: "Courier New", Courier, monospace; 
+                            color:#000; 
+                            margin:0; 
+                            padding:10px; 
+                            width: 280px; /* 58mm paper */
+                        }
+                        .receipt { width:100%; }
+                        h2 { text-align:center; margin:0 0 6px 0; font-size:16px; }
+                        .header-info { text-align:center; font-size:12px; margin-bottom:6px; }
+                        table { width:100%; font-size:12px; border-collapse:collapse; }
+                        th { text-align: left; border-bottom: 1px solid #000; padding: 4px 0; }
+                        td { padding:4px 0; }
+                        .col-qty { text-align:center; width:40px; }
+                        .col-total { text-align:right; }
+                        .totals { margin-top:10px; border-top:1px dashed #000; padding-top:5px; }
+                        .totals div { display:flex; justify-content:space-between; font-weight:700; font-size:13px; }
+                        .totals .total-row { font-size: 14px; }
+                        .footer { text-align:center; margin-top:10px; font-size:12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="receipt">
+                        <h2>${escapeHtml(settings.shopName)}</h2>
+                        <div class="header-info">
+                            ${escapeHtml(settings.shopAddress)}<br>
+                            ${escapeHtml(settings.shopPhone)}
+                        </div>
+                        <div class="header-info">Transaction #: ${Date.now()}</div>
+                        
+                        <table>
+                            <thead>
+                                <tr><th>Item</th><th class="col-qty">Qty</th><th class="col-total">Total</th></tr>
+                            </thead>
+                            <tbody>
+                                ${itemsHtml}
+                            </tbody>
+                        </table>
+
+                        <div class="totals">
+                            <div><span>Subtotal:</span><span>PKR ${subtotal.toFixed(2)}</span></div>
+                            <div><span>Tax (${settings.taxRate}%):</span><span>PKR ${tax.toFixed(2)}</span></div>
+                            <div class="total-row"><span>Total:</span><span>PKR ${total.toFixed(2)}</span></div>
+                        </div>
+
+                        <div class="footer">
+                            ${escapeHtml(settings.footerNote)}
+                        </div>
+                    </div>
+
+                    <script>
+                        // Auto-print and close the window
+                        function initPrint() {
+                            try {
+                                window.print();
+                            } catch (e) {
+                                console.error("Print failed", e);
+                            }
+                            // Close window after print dialog is handled
+                            window.onafterprint = () => window.close();
+                        }
+                        // Use setTimeout to ensure DOM is ready before printing
+                        setTimeout(initPrint, 100);
+                    <\/script>
+                </body>
+                </html>
+            `;
+
+            // 4. Open the new window and write the HTML
+            const printWindow = window.open('', '_blank', 'width=300,height=500,menubar=no,toolbar=no,scrollbars=yes');
+            if (!printWindow) {
+                alert("Popup blocked! Please allow popups for this site to print receipts.");
+                return;
+            }
+            
+            printWindow.document.open();
+            printWindow.document.write(receiptHtml);
+            printWindow.document.close();
+            
+            // 5. Poll the window to clear cart *after* it's closed
+            const poll = setInterval(() => {
+                if (printWindow.closed) {
+                    clearInterval(poll);
+                    handleClearCart();
+                }
+            }, 300); // Check every 300ms
+        }
+
+        // --- DATA MANAGEMENT FUNCTIONS ---
+
+        function downloadFile(content, fileName, contentType) {
+            const a = document.createElement('a');
+            const file = new Blob([content], { type: contentType });
+            a.href = URL.createObjectURL(file);
+            a.download = fileName;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        function exportDataJSON() {
+            const dataToExport = {
+                products: getProducts(),
+                settings: settings
+            };
+            const dataString = JSON.stringify(dataToExport, null, 2); // Pretty print
+            downloadFile(dataString, 'pos_backup.json', 'application/json');
+        }
+        
+        function exportDataCSV() {
+            const products = getProducts();
+            if (products.length === 0) {
+                alert('No products to export.');
+                return;
+            }
+            
+            let csvContent = "sku,name,price\n"; // Headers
+            products.forEach(p => {
+                csvContent += `${p.sku},"${p.name}",${p.price}\n`;
+            });
+            
+            downloadFile(csvContent, 'pos_product_report.csv', 'text/csv');
+        }
+
+        function importDataJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const fileContent = e.target.result;
+                    const importedData = JSON.parse(fileContent);
+                    
+                    if (!importedData.products || !importedData.settings) {
+                        throw new Error("Invalid backup file format.");
+                    }
+
+                    if (confirm('Importing this file will overwrite all current products AND settings. Continue?')) {
+                        saveProducts(importedData.products);
+                        settings = { ...DEFAULT_SETTINGS, ...importedData.settings };
+                        saveSettings();
+                        
+                        alert('Backup restored successfully!');
+                        // Full UI refresh
+                        updateSettingsUI();
+                        refreshAllUI();
+                    }
+                } catch (error) {
+                    alert(`Error: ${error.message}`);
+                }
+            };
+            reader.readAsText(file);
+            
+            // Clear the input value so the same file can be loaded again
+            event.target.value = null;
+        }
+
+
+        // --- ADD EVENT LISTENERS ---
+        tabRegister.addEventListener('click', handleTabSwitch);
+        tabInventory.addEventListener('click', handleTabSwitch);
+        tabSettings.addEventListener('click', handleTabSwitch);
+        
+        productForm.addEventListener('submit', handleSaveProduct);
+        inventoryTbody.addEventListener('click', handleDeleteProduct);
+        
+        salesGrid.addEventListener('click', handleAddToCart);
+        cartItemsContainer.addEventListener('click', handleCartQtyChange);
+        clearCartButton.addEventListener('click', handleClearCart);
+        payButton.addEventListener('click', handlePrintReceipt);
+        
+        // Settings listeners
+        settingsForm.addEventListener('submit', handleSaveSettings);
+        exportJsonBtn.addEventListener('click', exportDataJSON);
+        exportCsvBtn.addEventListener('click', exportDataCSV);
+        importFileEl.addEventListener('change', importDataJSON);
+
+        // Add a listener for when the print dialog is closed (printed or cancelled)
+        // --- REMOVING THIS --- It's unreliable and causing the race condition.
+        // window.addEventListener('afterprint', handleClearCart);
+
+        // --- INITIAL LOAD ---
+        loadSettings();
+        updateSettingsUI();
+        refreshAllUI();
+    });
+    </script>
+</body>
+</html>
+
