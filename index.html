@@ -355,80 +355,16 @@
             margin-top: 0;
         }
 
-
-        /* ---################--- */
-        /* --- PRINT STYLES --- */
-        /* ---################--- */
-
-        /* This is the hidden container for our receipt */
-        .printable-receipt-container {
-            display: none; /* Hidden by default, JS will toggle this */
-        }
-
-        @media print {
-            /* Hide the entire website */
-            body > :not(.printable-receipt-container) {
-                visibility: hidden;
-            }
-
-            /* Hide the modal when printing */
-            .modal-overlay {
-                display: none !important;
-            }
-            
-            /* Show *only* the receipt container and its contents */
-            .printable-receipt-container, .printable-receipt-container * {
-                visibility: visible;
-            }
-            
-            /* Move the receipt to the top left of the print page */
-            .printable-receipt-container {
-                display: block !important; /* Ensure it's visible */
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-            }
-
-            /* --- This is the design for your printable receipt slip --- */
-            .receipt-print {
-                font-family: "Courier New", Courier, monospace; 
-                color:#000; 
-                margin:0; 
-                padding:0; 
-                width: 280px; /* 58mm paper */
-            }
-            .receipt-print h2 { text-align:center; margin:0 0 6px 0; font-size:16px; }
-            .receipt-print .header-info { text-align:center; font-size:12px; margin-bottom:6px; }
-            .receipt-print table { width:100%; font-size:12px; border-collapse:collapse; }
-            .receipt-print th { text-align: left; border-bottom: 1px solid #000; padding: 4px 0; }
-            .receipt-print td { padding:4px 0; }
-            .receipt-print .col-qty { text-align:center; width:40px; }
-            .receipt-print .col-total { text-align:right; }
-            .receipt-print .totals-print { margin-top:10px; border-top:1px dashed #000; padding-top:5px; }
-            .receipt-print .totals-print div { display:flex; justify-content:space-between; font-weight:700; font-size:13px; }
-            .receipt-print .totals-print .total-row { font-size: 14px; }
-            .receipt-print .footer-print { text-align:center; margin-top:10px; font-size:12px; }
-        }
-        
-        /* Optional: Set the paper size for 58mm printers */
-        @page {
-            size: 58mm auto;
-            margin: 5mm;
-        }
+        /* --- REMOVED: All @media print styles --- */
         
     </style>
 </head>
 <body>
-
-    <!-- ======== HIDDEN RECEIPT TEMPLATE ======== -->
-    <!-- This is where the receipt will be built just before printing -->
-    <div class="printable-receipt-container" id="receipt-container">
-        <!-- Receipt content will be injected here by JS -->
-    </div>
+    
+    <!-- REMOVED: Hidden receipt container -->
     
     <!-- ======== MAIN POS INTERFACE ======== -->
-    <div class="container" id="app" data-theme="light"> <!-- data-theme is now locked to light -->
+    <div class="container" id="app" data-theme="light">
         <!-- Topbar -->
         <div class="topbar">
             <div class="brand">
@@ -454,7 +390,6 @@
                 <div class="card">
                     <h2>Sales Register</h2>
                     
-                    <!-- NEW: Advanced Filter Controls -->
                     <div class="filter-controls">
                         <div>
                             <label for="filter-category">Filter by Category</label>
@@ -588,15 +523,7 @@
         </div>
     </div>
 
-    <!-- Mobile Print Modal -->
-    <div id="mobile-print-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>Receipt Ready</h2>
-            <p>Your receipt is ready to be printed.</p>
-            <p>Please use your browser's "Share" or "Print" option from the menu to print your receipt.</p>
-            <button id="close-print-modal" class="btn">Done</button>
-        </div>
-    </div>
+    <!-- REMOVED: Mobile Print Modal -->
 
     <!-- Confirmation Modal -->
     <div id="confirm-modal" class="modal-overlay">
@@ -618,7 +545,7 @@
         let products = [];
         let cart = [];
         let settings = {};
-        let confirmCallback = null; // Store the confirm action
+        let confirmCallback = null; 
         
         const DEFAULT_SETTINGS = {
             shopName: "My Web POS",
@@ -627,7 +554,6 @@
             footerNote: "Thank you for your business!",
             taxRate: 5.0,
             layout: "grid"
-            // REMOVED: theme property
         };
 
         // --- DOM SELECTORS ---
@@ -662,12 +588,8 @@
         const payButton = document.getElementById('pay-button');
         const clearCartButton = document.getElementById('clear-cart-button');
         
-        // Receipt (The hidden container)
-        const receiptContainer = document.getElementById('receipt-container');
-
-        // Mobile Modal
-        const mobilePrintModal = document.getElementById('mobile-print-modal');
-        const closePrintModalBtn = document.getElementById('close-print-modal');
+        // REMOVED: receiptContainer
+        // REMOVED: mobilePrintModal, closePrintModalBtn
 
         // Confirm Modal
         const confirmModal = document.getElementById('confirm-modal');
@@ -675,7 +597,6 @@
         const confirmModalMessage = document.getElementById('confirm-modal-message');
         const confirmModalConfirmBtn = document.getElementById('confirm-modal-confirm');
         const confirmModalCancelBtn = document.getElementById('confirm-modal-cancel');
-
 
         // Settings Page
         const settingsForm = document.getElementById('settings-form');
@@ -685,7 +606,6 @@
         const settingFooterNote = document.getElementById('setting-footer-note');
         const settingTaxRate = document.getElementById('setting-tax-rate');
         const settingLayout = document.getElementById('setting-layout');
-        // REMOVED: settingTheme and toggleThemeBtn
         
         const exportJsonBtn = document.getElementById('export-json-btn');
         const exportCsvBtn = document.getElementById('export-csv-btn');
@@ -721,8 +641,7 @@
                 savedSettings = {};
             }
             settings = { ...DEFAULT_SETTINGS, ...savedSettings };
-            // REMOVED: applyTheme call
-            saveSettings(); // Save merged settings back
+            saveSettings(); 
         }
 
         function saveSettings() {
@@ -758,8 +677,8 @@
         }
         
         function populateCategoryFilter() {
-            const categories = [...new Set(products.map(p => p.category).filter(Boolean))]; // Get unique, non-empty categories
-            filterCategory.innerHTML = '<option value="all">All Categories</option>'; // Reset
+            const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
+            filterCategory.innerHTML = '<option value="all">All Categories</option>'; 
             categories.sort().forEach(category => {
                 const option = document.createElement('option');
                 option.value = category;
@@ -777,7 +696,6 @@
             
             let visibleProducts = [...products];
 
-            // 1. Filter by Search
             if (searchTerm) {
                 visibleProducts = visibleProducts.filter(p => 
                     p.name.toLowerCase().includes(searchTerm) || 
@@ -785,12 +703,10 @@
                 );
             }
             
-            // 2. Filter by Category
             if (categoryFilter !== 'all') {
                 visibleProducts = visibleProducts.filter(p => p.category === categoryFilter);
             }
 
-            // 3. Sort
             switch (sortMethod) {
                 case 'name-asc':
                     visibleProducts.sort((a, b) => a.name.localeCompare(b.name));
@@ -804,17 +720,14 @@
                 case 'price-desc':
                     visibleProducts.sort((a, b) => b.price - a.price);
                     break;
-                // 'default' case needs no sorting
             }
-
 
             if (visibleProducts.length === 0) {
                 salesGrid.innerHTML = '<p style="color: var(--muted); grid-column: 1 / -1;">No products found.</p>';
                 return;
             }
             
-            // Apply layout setting
-            salesGrid.className = 'sales-grid'; // Reset
+            salesGrid.className = 'sales-grid'; 
             if (settings.layout === 'list') {
                 salesGrid.classList.add('sales-grid-list-view');
             }
@@ -882,7 +795,6 @@
             settingFooterNote.value = settings.footerNote;
             settingTaxRate.value = settings.taxRate;
             settingLayout.value = settings.layout;
-            // REMOVED: settingTheme and applyTheme
         }
         
         function refreshAllUI() {
@@ -899,24 +811,22 @@
             return str.replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[m]);
         }
         
-        // --- REMOVED: THEME FUNCTIONS ---
-        
         // --- MODAL FUNCTIONS ---
         function showConfirmModal(title, message, onConfirm) {
             confirmModalTitle.textContent = title;
             confirmModalMessage.textContent = message;
-            confirmCallback = onConfirm; // Store the action
+            confirmCallback = onConfirm;
             confirmModal.style.display = 'flex';
         }
 
         function hideConfirmModal() {
             confirmModal.style.display = 'none';
-            confirmCallback = null; // Clear the action
+            confirmCallback = null; 
         }
 
         function handleConfirm() {
             if (typeof confirmCallback === 'function') {
-                confirmCallback(); // Execute the stored action
+                confirmCallback(); 
             }
             hideConfirmModal();
         }
@@ -927,11 +837,9 @@
         function handleTabSwitch(e) {
             const selectedTab = e.target.id;
             
-            // Hide all content
             contentRegister.classList.remove('active');
             contentInventory.classList.remove('active');
             contentSettings.classList.remove('active');
-            // Deactivate all tabs
             tabRegister.classList.remove('active');
             tabInventory.classList.remove('active');
             tabSettings.classList.remove('active');
@@ -968,9 +876,9 @@
             const existingIndex = products.findIndex(p => p.sku === sku);
             
             if (existingIndex > -1) {
-                products[existingIndex] = newProduct; // Update
+                products[existingIndex] = newProduct; 
             } else {
-                products.push(newProduct); // Add new
+                products.push(newProduct); 
             }
             
             saveProducts(products);
@@ -1050,99 +958,138 @@
             settings.footerNote = settingFooterNote.value;
             settings.taxRate = parseFloat(settingTaxRate.value) || 0;
             settings.layout = settingLayout.value;
-            // REMOVED: theme setting
             
             saveSettings();
-            // REMOVED: applyTheme call
             alert("Settings saved!");
 
             renderSalesGrid();
             renderCart(); 
         }
         
+        // --- NEW ROBUST PRINT LOGIC ---
         function handlePrintReceipt() {
             if (cart.length === 0) {
                 alert('Cart is empty.');
                 return;
             }
 
+            // 1. Calculate totals
             let subtotal = 0;
             cart.forEach(i => subtotal += i.price * i.qty);
             const tax = subtotal * (settings.taxRate / 100);
             const total = subtotal + tax;
 
+            // 2. Build receipt items HTML string
             const itemsHtml = cart.map(item => `
                 <tr>
                     <td>${escapeHtml(item.name)}</td>
-                    <td class="col-qty">${item.qty}</td>
+                    <td class"col-qty">${item.qty}</td>
                     <td class="col-total">PKR ${(item.price * item.qty).toFixed(2)}</td>
                 </tr>
             `).join('');
 
+            // 3. Build the full receipt HTML document (as a string)
             const receiptHtml = `
-                <div class="receipt-print">
-                    <h2>${escapeHtml(settings.shopName)}</h2>
-                    <div class="header-info">
-                        ${escapeHtml(settings.shopAddress)}<br>
-                        ${escapeHtml(settings.shopPhone)}
+                <!doctype html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <title>Receipt</title>
+                    <meta name="viewport" content="width=device-width,initial-scale=1">
+                    <style>
+                        body { 
+                            font-family: "Courier New", Courier, monospace; 
+                            color:#000; 
+                            margin:0; 
+                            padding:10px; 
+                            width: 280px; /* 58mm paper */
+                        }
+                        .receipt-print { width:100%; }
+                        h2 { text-align:center; margin:0 0 6px 0; font-size:16px; }
+                        .header-info { text-align:center; font-size:12px; margin-bottom:6px; }
+                        table { width:100%; font-size:12px; border-collapse:collapse; }
+                        th { text-align: left; border-bottom: 1px solid #000; padding: 4px 0; }
+                        td { padding:4px 0; }
+                        .col-qty { text-align:center; width:40px; }
+                        .col-total { text-align:right; }
+                        .totals-print { margin-top:10px; border-top:1px dashed #000; padding-top:5px; }
+                        .totals-print div { display:flex; justify-content:space-between; font-weight:700; font-size:13px; }
+                        .totals-print .total-row { font-size: 14px; }
+                        .footer-print { text-align:center; margin-top:10px; font-size:12px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="receipt-print">
+                        <h2>${escapeHtml(settings.shopName)}</h2>
+                        <div class="header-info">
+                            ${escapeHtml(settings.shopAddress)}<br>
+                            ${escapeHtml(settings.shopPhone)}
+                        </div>
+                        <div class="header-info">Transaction #: ${Date.now()}</div>
+                        
+                        <table>
+                            <thead>
+                                <tr><th>Item</th><th class="col-qty">Qty</th><th class="col-total">Total</th></tr>
+                            </thead>
+                            <tbody>
+                                ${itemsHtml}
+                            </tbody>
+                        </table>
+
+                        <div class="totals-print">
+                            <div><span>Subtotal:</span><span>PKR ${subtotal.toFixed(2)}</span></div>
+                            <div><span>Tax (${settings.taxRate}%):</span><span>PKR ${tax.toFixed(2)}</span></div>
+                            <div class="total-row"><span>Total:</span><span>PKR ${total.toFixed(2)}</span></div>
+                        </div>
+
+                        <div class="footer-print">
+                            ${escapeHtml(settings.footerNote)}
+                        </div>
                     </div>
-                    <div class="header-info">Transaction #: ${Date.now()}</div>
                     
-                    <table>
-                        <thead>
-                            <tr><th>Item</th><th class="col-qty">Qty</th><th class="col-total">Total</th></tr>
-                        </thead>
-                        <tbody>
-                            ${itemsHtml}
-                        </tbody>
-                    </table>
-
-                    <div class="totals-print">
-                        <div><span>Subtotal:</span><span>PKR ${subtotal.toFixed(2)}</span></div>
-                        <div><span>Tax (${settings.taxRate}%):</span><span>PKR ${tax.toFixed(2)}</span></div>
-                        <div class="total-row"><span>Total:</span><span>PKR ${total.toFixed(2)}</span></div>
-                    </div>
-
-                    <div class="footer-print">
-                        ${escapeHtml(settings.footerNote)}
-                    </div>
-                </div>
+                    <script>
+                        // Auto-print and close
+                        function initPrint() {
+                            try {
+                                window.print();
+                            } catch (e) {
+                                console.error("Print failed", e);
+                            }
+                            // Close window after print dialog is handled
+                            // Use a short delay for browsers that close the dialog immediately
+                            setTimeout(() => {
+                                try { window.close(); } catch (e) {}
+                            }, 500);
+                        }
+                        // Use setTimeout to ensure DOM is ready before printing
+                        setTimeout(initPrint, 100);
+                    <\/script>
+                </body>
+                </html>
             `;
 
-            receiptContainer.innerHTML = receiptHtml;
-
-            const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-
-            if (isMobile) {
-                appRoot.style.display = 'none'; 
-                receiptContainer.style.display = 'block'; 
-                mobilePrintModal.style.display = 'flex'; 
-            } else {
-                window.requestAnimationFrame(() => {
-                    try {
-                        window.print();
-                    } catch (e) {
-                        console.error("Print failed", e);
-                    }
-                });
+            // 4. Open the new window and write the HTML
+            const printWindow = window.open('', '_blank', 'width=300,height=500,menubar=no,toolbar=no,scrollbars=yes');
+            if (!printWindow) {
+                alert("Popup blocked! Please allow popups for this site to print receipts.");
+                return;
             }
+            
+            printWindow.document.open();
+            printWindow.document.write(receiptHtml);
+            printWindow.document.close();
+            
+            // 5. Poll the window to clear cart *after* it's closed
+            const poll = setInterval(() => {
+                if (!printWindow || printWindow.closed) {
+                    clearInterval(poll);
+                    cart = []; // Clear cart
+                    renderCart(); // Update UI
+                }
+            }, 300); // Check every 300ms
         }
         
-        function afterPrintActions() {
-            appRoot.style.display = 'block';
-            receiptContainer.style.display = 'none';
-            
-            cart = [];
-            renderCart();
-            
-            receiptContainer.innerHTML = '';
-        }
-
-        function handleCloseMobileModal() {
-            mobilePrintModal.style.display = 'none';
-            afterPrintActions();
-        }
-
+        // REMOVED: afterPrintActions and handleCloseMobileModal
 
         // --- DATA MANAGEMENT FUNCTIONS ---
 
@@ -1238,18 +1185,17 @@
         cartItemsContainer?.addEventListener('click', handleCartQtyChange);
         clearCartButton?.addEventListener('click', handleClearCart);
         payButton?.addEventListener('click', handlePrintReceipt);
-        closePrintModalBtn?.addEventListener('click', handleCloseMobileModal);
+        // REMOVED: closePrintModalBtn listener
         
         confirmModalCancelBtn?.addEventListener('click', hideConfirmModal);
         confirmModalConfirmBtn?.addEventListener('click', handleConfirm);
         
         settingsForm?.addEventListener('submit', handleSaveSettings);
-        // REMOVED: toggleThemeBtn listener
         exportJsonBtn?.addEventListener('click', exportDataJSON);
         exportCsvBtn?.addEventListener('click', exportDataCSV);
         importFileEl?.addEventListener('change', importDataJSON);
 
-        window.onafterprint = afterPrintActions;
+        // REMOVED: window.onafterprint listener
 
         // --- INITIAL LOAD ---
         loadSettings();
