@@ -19,18 +19,6 @@
             --shadow: 0 4px 6px rgba(0,0,0,0.08);
         }
 
-        [data-theme="dark"] {
-            --bg: #0f172a;
-            --card: #1e293b; /* Darker card */
-            --text: #e2e8f0;
-            --muted: #94a3b8;
-            --border: #334155;
-            --primary: #60a5fa;
-            --success: #34d399;
-            --danger: #fb7185;
-            --shadow: 0 8px 18px rgba(0,0,0,0.25);
-        }
-
         /* --- Global Styles --- */
         * { box-sizing: border-box; }
         body {
@@ -40,7 +28,6 @@
             margin: 0;
             padding: 1rem; /* p-4 mobile */
             min-height: 100vh;
-            transition: background-color 0.2s, color 0.2s;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
@@ -91,15 +78,7 @@
             color: var(--text);
             flex-grow: 1; /* Take remaining space */
         }
-        .theme-toggle {
-            padding: 0.45rem 0.6rem;
-            border-radius: 0.5rem;
-            border: 1px solid var(--border);
-            cursor: pointer;
-            background: var(--card);
-            color: var(--muted);
-            flex-shrink: 0;
-        }
+        /* REMOVED: Theme toggle button style */
 
         /* --- Tabs --- */
         .tab-nav {
@@ -166,7 +145,7 @@
             box-sizing: border-box;
             font-size: 1rem;
         }
-        input:focus {
+        input:focus, select:focus {
             border-color: var(--primary);
             outline: 2px solid transparent;
             box-shadow: 0 0 0 2px var(--primary);
@@ -181,6 +160,27 @@
         @media(min-width: 768px) {
             .form-grid { grid-template-columns: repeat(3, 1fr); }
         }
+        
+        /* Advanced Filter Controls */
+        .filter-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .filter-controls > div {
+            flex-grow: 1;
+            min-width: 150px; /* Allow wrapping */
+        }
+        .filter-controls label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+            color: var(--muted);
+        }
+
 
         button {
             font-weight: 600;
@@ -248,6 +248,16 @@
         .product-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--primary); }
         .product-card .name { font-weight:600; }
         .product-card .price { color: var(--primary); font-weight:600; font-size: 0.875rem; }
+        .product-card .category {
+            font-size: 0.75rem;
+            color: var(--muted);
+            background: var(--bg);
+            padding: 0.1rem 0.4rem;
+            border-radius: 0.25rem;
+            display: inline-block;
+            margin-top: 0.25rem;
+        }
+
 
         /* List view */
         .sales-grid-list-view { grid-template-columns: 1fr; }
@@ -288,7 +298,7 @@
 
         /* --- Table / Inventory --- */
         .table-wrapper { overflow-x:auto; }
-        table { width:100%; border-collapse:collapse; min-width: 400px; }
+        table { width:100%; border-collapse:collapse; min-width: 500px; /* Wider for category */ }
         th, td { padding:0.75rem; text-align:left; border-bottom: 1px solid var(--border); }
         th { color: var(--muted); font-weight:600; font-size:0.875rem; }
         td:last-child { text-align: right; }
@@ -418,7 +428,7 @@
     </div>
     
     <!-- ======== MAIN POS INTERFACE ======== -->
-    <div class="container" id="app" data-theme="light">
+    <div class="container" id="app" data-theme="light"> <!-- data-theme is now locked to light -->
         <!-- Topbar -->
         <div class="topbar">
             <div class="brand">
@@ -428,7 +438,7 @@
             </div>
             <div class="controls">
                 <input id="product-search" class="search-input" placeholder="Search products... (Press /)">
-                <button id="toggle-theme" class="theme-toggle" title="Toggle theme">🌙</button>
+                <!-- REMOVED: Theme toggle button -->
             </div>
         </div>
 
@@ -443,6 +453,28 @@
             <div class="register-layout">
                 <div class="card">
                     <h2>Sales Register</h2>
+                    
+                    <!-- NEW: Advanced Filter Controls -->
+                    <div class="filter-controls">
+                        <div>
+                            <label for="filter-category">Filter by Category</label>
+                            <select id="filter-category">
+                                <option value="all">All Categories</option>
+                                <!-- Categories populated by JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="sort-by">Sort by</label>
+                            <select id="sort-by">
+                                <option value="default">Default</option>
+                                <option value="name-asc">Name (A-Z)</option>
+                                <option value="name-desc">Name (Z-A)</option>
+                                <option value="price-asc">Price (Low-High)</option>
+                                <option value="price-desc">Price (High-Low)</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="sales-grid" id="sales-grid">
                         <!-- Products will be loaded here by JS -->
                     </div>
@@ -479,10 +511,12 @@
         <div id="content-inventory" class="tab-content">
             <div class="card">
                 <h2>Inventory Management</h2>
-                <form id="add-product-form" class="form-grid">
-                    <input type="text" id="product-name" placeholder="Product Name" required>
+                <form id="add-product-form" class="form-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 1.5rem;">
+                    <input type="text" id="product-name" placeholder="Product Name" required style="grid-column: 1 / -1;">
                     <input type="number" id="product-price" placeholder="Price" min="0" step="0.01" required>
                     <input type="text" id="product-sku" placeholder="SKU / Barcode (Optional)">
+                    <input type="text" id="product-category" placeholder="Category (e.g. 'Drinks')">
+                    
                     <button type="submit" class="btn" style="grid-column: 1 / -1;">Save Product</button>
                 </form>
     
@@ -494,6 +528,7 @@
                                 <th>Name</th>
                                 <th>Price</th>
                                 <th>SKU</th>
+                                <th>Category</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -532,13 +567,7 @@
                                 <option value="list">List View</option>
                             </select>
                         </div>
-                        <div>
-                            <label for="setting-theme" style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: var(--muted);">App Theme</label>
-                            <select id="setting-theme">
-                                <option value="light">Light</option>
-                                <option value="dark">Dark</option>
-                            </select>
-                        </div>
+                        <!-- REMOVED: Theme selector div -->
                     </div>
                     
                     <button type="submit" class="btn">Save Settings</button>
@@ -569,7 +598,7 @@
         </div>
     </div>
 
-    <!-- NEW: Confirmation Modal -->
+    <!-- Confirmation Modal -->
     <div id="confirm-modal" class="modal-overlay">
         <div class="modal-content">
             <h2 id="confirm-modal-title">Are you sure?</h2>
@@ -597,8 +626,8 @@
             shopPhone: "",
             footerNote: "Thank you for your business!",
             taxRate: 5.0,
-            layout: "grid",
-            theme: "light"
+            layout: "grid"
+            // REMOVED: theme property
         };
 
         // --- DOM SELECTORS ---
@@ -615,11 +644,14 @@
         const productNameInput = document.getElementById('product-name');
         const productPriceInput = document.getElementById('product-price');
         const productSkuInput = document.getElementById('product-sku');
+        const productCategoryInput = document.getElementById('product-category');
         const inventoryTbody = document.getElementById('inventory-tbody');
         
         // Register Page
         const salesGrid = document.getElementById('sales-grid');
         const productSearch = document.getElementById('product-search');
+        const filterCategory = document.getElementById('filter-category');
+        const sortBy = document.getElementById('sort-by');
         
         // Cart
         const cartItemsContainer = document.getElementById('cart-items');
@@ -637,7 +669,7 @@
         const mobilePrintModal = document.getElementById('mobile-print-modal');
         const closePrintModalBtn = document.getElementById('close-print-modal');
 
-        // NEW: Confirm Modal
+        // Confirm Modal
         const confirmModal = document.getElementById('confirm-modal');
         const confirmModalTitle = document.getElementById('confirm-modal-title');
         const confirmModalMessage = document.getElementById('confirm-modal-message');
@@ -653,8 +685,7 @@
         const settingFooterNote = document.getElementById('setting-footer-note');
         const settingTaxRate = document.getElementById('setting-tax-rate');
         const settingLayout = document.getElementById('setting-layout');
-        const settingTheme = document.getElementById('setting-theme');
-        const toggleThemeBtn = document.getElementById('toggle-theme');
+        // REMOVED: settingTheme and toggleThemeBtn
         
         const exportJsonBtn = document.getElementById('export-json-btn');
         const exportCsvBtn = document.getElementById('export-csv-btn');
@@ -690,8 +721,8 @@
                 savedSettings = {};
             }
             settings = { ...DEFAULT_SETTINGS, ...savedSettings };
+            // REMOVED: applyTheme call
             saveSettings(); // Save merged settings back
-            applyTheme(settings.theme); // Apply loaded theme
         }
 
         function saveSettings() {
@@ -707,7 +738,7 @@
         function renderInventoryList() {
             inventoryTbody.innerHTML = '';
             if (products.length === 0) {
-                inventoryTbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--muted);">No products in inventory.</td></tr>';
+                inventoryTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--muted);">No products in inventory.</td></tr>';
                 return;
             }
             
@@ -717,6 +748,7 @@
                     <td>${escapeHtml(product.name)}</td>
                     <td>PKR ${product.price.toFixed(2)}</td>
                     <td>${escapeHtml(product.sku)}</td>
+                    <td>${escapeHtml(product.category)}</td>
                     <td>
                         <button class="btn-red-small delete-btn" data-sku="${product.sku}">Delete</button>
                     </td>
@@ -725,16 +757,58 @@
             });
         }
         
-        function renderSalesGrid(filter = '') {
+        function populateCategoryFilter() {
+            const categories = [...new Set(products.map(p => p.category).filter(Boolean))]; // Get unique, non-empty categories
+            filterCategory.innerHTML = '<option value="all">All Categories</option>'; // Reset
+            categories.sort().forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = escapeHtml(category);
+                filterCategory.appendChild(option);
+            });
+        }
+
+        function renderSalesGrid() {
             salesGrid.innerHTML = '';
             
-            const normalizedFilter = filter.toLowerCase();
-            const filteredProducts = products.filter(p => 
-                p.name.toLowerCase().includes(normalizedFilter) || 
-                p.sku.toLowerCase().includes(normalizedFilter)
-            );
+            const searchTerm = productSearch.value.toLowerCase();
+            const categoryFilter = filterCategory.value;
+            const sortMethod = sortBy.value;
+            
+            let visibleProducts = [...products];
 
-            if (filteredProducts.length === 0) {
+            // 1. Filter by Search
+            if (searchTerm) {
+                visibleProducts = visibleProducts.filter(p => 
+                    p.name.toLowerCase().includes(searchTerm) || 
+                    p.sku.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // 2. Filter by Category
+            if (categoryFilter !== 'all') {
+                visibleProducts = visibleProducts.filter(p => p.category === categoryFilter);
+            }
+
+            // 3. Sort
+            switch (sortMethod) {
+                case 'name-asc':
+                    visibleProducts.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+                case 'name-desc':
+                    visibleProducts.sort((a, b) => b.name.localeCompare(a.name));
+                    break;
+                case 'price-asc':
+                    visibleProducts.sort((a, b) => a.price - b.price);
+                    break;
+                case 'price-desc':
+                    visibleProducts.sort((a, b) => b.price - a.price);
+                    break;
+                // 'default' case needs no sorting
+            }
+
+
+            if (visibleProducts.length === 0) {
                 salesGrid.innerHTML = '<p style="color: var(--muted); grid-column: 1 / -1;">No products found.</p>';
                 return;
             }
@@ -745,13 +819,16 @@
                 salesGrid.classList.add('sales-grid-list-view');
             }
 
-            filteredProducts.forEach(product => {
+            visibleProducts.forEach(product => {
                 const card = document.createElement('button');
                 card.className = 'product-card';
                 card.dataset.sku = product.sku;
                 card.innerHTML = `
-                    <span class="name">${escapeHtml(product.name)}</span>
-                    <span class="price">PKR ${product.price.toFixed(2)}</span>
+                    <div>
+                        <span class="name">${escapeHtml(product.name)}</span>
+                        <span class="price">PKR ${product.price.toFixed(2)}</span>
+                    </div>
+                    ${product.category ? `<span class="category">${escapeHtml(product.category)}</span>` : ''}
                 `;
                 salesGrid.appendChild(card);
             });
@@ -805,14 +882,14 @@
             settingFooterNote.value = settings.footerNote;
             settingTaxRate.value = settings.taxRate;
             settingLayout.value = settings.layout;
-            settingTheme.value = settings.theme;
-            applyTheme(settings.theme); // Apply theme on load
+            // REMOVED: settingTheme and applyTheme
         }
         
         function refreshAllUI() {
             products = getProducts();
+            populateCategoryFilter();
             renderInventoryList();
-            renderSalesGrid(productSearch.value); // Pass current search value
+            renderSalesGrid(); 
             renderCart();
         }
         
@@ -822,21 +899,9 @@
             return str.replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[m]);
         }
         
-        // --- THEME ---
-        function applyTheme(themeName) {
-            appRoot.setAttribute('data-theme', themeName);
-            toggleThemeBtn.textContent = themeName === 'dark' ? '☀️' : '🌙';
-            settings.theme = themeName; // Ensure state is in sync
-            settingTheme.value = themeName; // Ensure dropdown is in sync
-        }
+        // --- REMOVED: THEME FUNCTIONS ---
         
-        function handleToggleTheme() {
-            const newTheme = settings.theme === 'light' ? 'dark' : 'light';
-            applyTheme(newTheme);
-            saveSettings(); // Save the new theme setting
-        }
-        
-        // --- NEW: MODAL FUNCTIONS ---
+        // --- MODAL FUNCTIONS ---
         function showConfirmModal(title, message, onConfirm) {
             confirmModalTitle.textContent = title;
             confirmModalMessage.textContent = message;
@@ -888,6 +953,7 @@
             const name = productNameInput.value.trim();
             const price = parseFloat(productPriceInput.value);
             let sku = productSkuInput.value.trim();
+            const category = productCategoryInput.value.trim();
             
             if (!name || isNaN(price) || price < 0) {
                 alert("Product Name and a valid Price are required.");
@@ -898,7 +964,7 @@
                 sku = 'item-' + Date.now();
             }
             
-            const newProduct = { name, price, sku };
+            const newProduct = { name, price, sku, category };
             const existingIndex = products.findIndex(p => p.sku === sku);
             
             if (existingIndex > -1) {
@@ -910,14 +976,13 @@
             saveProducts(products);
             refreshAllUI();
             productForm.reset();
-            productNameInput.focus(); // Focus name for next entry
+            productNameInput.focus(); 
         }
         
         function handleDeleteProduct(e) {
             if (!e.target.classList.contains('delete-btn')) return;
             const sku = e.target.dataset.sku;
             
-            // Use NEW modal
             showConfirmModal("Delete Product", `Are you sure you want to delete product SKU: ${sku}?`, () => {
                 products = products.filter(p => p.sku !== sku);
                 saveProducts(products);
@@ -971,7 +1036,6 @@
                 return;
             }
             
-            // Use NEW modal
             showConfirmModal("Clear Cart", "Are you sure you want to clear the current cart?", () => {
                 cart = [];
                 renderCart();
@@ -986,36 +1050,27 @@
             settings.footerNote = settingFooterNote.value;
             settings.taxRate = parseFloat(settingTaxRate.value) || 0;
             settings.layout = settingLayout.value;
-            settings.theme = settingTheme.value;
+            // REMOVED: theme setting
             
             saveSettings();
-            applyTheme(settings.theme);
+            // REMOVED: applyTheme call
             alert("Settings saved!");
 
-            // Re-render UI elements that depend on settings
-            renderSalesGrid(productSearch.value);
-            renderCart(); // This will update tax
+            renderSalesGrid();
+            renderCart(); 
         }
         
-        // --- NEW PRINT RECEIPT LOGIC (Mobile Friendly) ---
         function handlePrintReceipt() {
             if (cart.length === 0) {
-                // Use new modal for alerts too
-                showConfirmModal("Empty Cart", "Cannot print a receipt for an empty cart.", () => {});
-                // Make the confirm button primary instead of danger
-                confirmModalConfirmBtn.className = "btn btn-primary"; // (need to add .btn-primary)
-                // For now, just use alert
                 alert('Cart is empty.');
                 return;
             }
 
-            // 1. Calculate totals
             let subtotal = 0;
             cart.forEach(i => subtotal += i.price * i.qty);
             const tax = subtotal * (settings.taxRate / 100);
             const total = subtotal + tax;
 
-            // 2. Build receipt items HTML string
             const itemsHtml = cart.map(item => `
                 <tr>
                     <td>${escapeHtml(item.name)}</td>
@@ -1024,7 +1079,6 @@
                 </tr>
             `).join('');
 
-            // 3. Build the full receipt HTML document
             const receiptHtml = `
                 <div class="receipt-print">
                     <h2>${escapeHtml(settings.shopName)}</h2>
@@ -1055,20 +1109,15 @@
                 </div>
             `;
 
-            // 4. Inject HTML into the hidden container
             receiptContainer.innerHTML = receiptHtml;
 
-            // 5. *** NEW LOGIC: Check for mobile ***
             const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
             if (isMobile) {
-                // On mobile, don't call print().
-                // Instead: 1. Hide app, 2. Show receipt, 3. Show modal
-                appRoot.style.display = 'none'; // Hide the main app
-                receiptContainer.style.display = 'block'; // Show the receipt
-                mobilePrintModal.style.display = 'flex'; // Show the modal
+                appRoot.style.display = 'none'; 
+                receiptContainer.style.display = 'block'; 
+                mobilePrintModal.style.display = 'flex'; 
             } else {
-                // On desktop, use the reliable requestAnimationFrame method
                 window.requestAnimationFrame(() => {
                     try {
                         window.print();
@@ -1079,20 +1128,16 @@
             }
         }
         
-        // This function runs *after* the print dialog is closed OR when modal is closed
         function afterPrintActions() {
-            // Restore UI (for mobile flow)
             appRoot.style.display = 'block';
             receiptContainer.style.display = 'none';
             
-            // Clear cart (no confirmation needed here)
             cart = [];
             renderCart();
             
-            receiptContainer.innerHTML = ''; // Clear the receipt HTML
+            receiptContainer.innerHTML = '';
         }
 
-        // New handler for the mobile modal "Done" button
         function handleCloseMobileModal() {
             mobilePrintModal.style.display = 'none';
             afterPrintActions();
@@ -1115,7 +1160,7 @@
                 products: getProducts(),
                 settings: settings
             };
-            const dataString = JSON.stringify(dataToExport, null, 2); // Pretty print
+            const dataString = JSON.stringify(dataToExport, null, 2); 
             downloadFile(dataString, 'pos_backup.json', 'application/json');
         }
         
@@ -1126,9 +1171,9 @@
                 return;
             }
             
-            let csvContent = "sku,name,price\n"; // Headers
+            let csvContent = "sku,name,price,category\n"; 
             products.forEach(p => {
-                csvContent += `${p.sku},"${p.name.replace(/"/g, '""')}",${p.price}\n`;
+                csvContent += `${p.sku},"${p.name.replace(/"/g, '""')}",${p.price},"${(p.category || '').replace(/"/g, '""')}"\n`;
             });
             
             downloadFile(csvContent, 'pos_product_report.csv', 'text/csv');
@@ -1148,14 +1193,12 @@
                         throw new Error("Invalid backup file format.");
                     }
                     
-                    // Use NEW modal
                     showConfirmModal("Import Data", "This will overwrite all current products AND settings. Continue?", () => {
-                        saveProducts(importedData.products);
-                        settings = { ...DEFAULT_SETTINGS, ...importedData.settings };
+                        saveProducts(importedData.products || []);
+                        settings = { ...DEFAULT_SETTINGS, ...(importedData.settings || {}) };
                         saveSettings();
                         
                         alert('Backup restored successfully!');
-                        // Full UI refresh
                         updateSettingsUI();
                         refreshAllUI();
                     });
@@ -1166,7 +1209,7 @@
             };
             reader.readAsText(file);
             
-            event.target.value = null; // Clear input
+            event.target.value = null; 
         }
 
 
@@ -1179,9 +1222,12 @@
         inventoryTbody?.addEventListener('click', handleDeleteProduct);
         
         salesGrid?.addEventListener('click', handleAddToCart);
-        productSearch?.addEventListener('input', (e) => renderSalesGrid(e.target.value));
         
-        // Search focus shortcut
+        productSearch?.addEventListener('input', () => renderSalesGrid());
+        filterCategory?.addEventListener('change', () => renderSalesGrid());
+        sortBy?.addEventListener('change', () => renderSalesGrid());
+
+        
         document.addEventListener('keydown', (e) => {
             if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
                 e.preventDefault();
@@ -1194,18 +1240,15 @@
         payButton?.addEventListener('click', handlePrintReceipt);
         closePrintModalBtn?.addEventListener('click', handleCloseMobileModal);
         
-        // NEW: Confirm modal listeners
         confirmModalCancelBtn?.addEventListener('click', hideConfirmModal);
         confirmModalConfirmBtn?.addEventListener('click', handleConfirm);
         
-        // Settings listeners
         settingsForm?.addEventListener('submit', handleSaveSettings);
-        toggleThemeBtn?.addEventListener('click', handleToggleTheme);
+        // REMOVED: toggleThemeBtn listener
         exportJsonBtn?.addEventListener('click', exportDataJSON);
         exportCsvBtn?.addEventListener('click', exportDataCSV);
         importFileEl?.addEventListener('change', importDataJSON);
 
-        // This is the reliable way to clear the cart AFTER printing (on desktop)
         window.onafterprint = afterPrintActions;
 
         // --- INITIAL LOAD ---
@@ -1216,4 +1259,5 @@
     </script>
 </body>
 </html>
+
 
