@@ -75,6 +75,11 @@ class App {
             this.toggleTheme();
         });
 
+        // Back button
+        document.getElementById('backButton')?.addEventListener('click', () => {
+            this.goBack();
+        });
+
         // Navigation items
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', (e) => {
@@ -240,6 +245,16 @@ class App {
     async navigateTo(view) {
         this.currentView = view;
 
+        // Update back button visibility
+        const backButton = document.getElementById('backButton');
+        if (backButton) {
+            if (view === 'dashboard') {
+                backButton.style.display = 'none';
+            } else {
+                backButton.style.display = 'inline-flex';
+            }
+        }
+
         // Update active nav item
         document.querySelectorAll('.nav-item').forEach(item => {
             item.classList.remove('active');
@@ -267,6 +282,11 @@ class App {
 
         // Scroll to top
         window.scrollTo(0, 0);
+    }
+
+    goBack() {
+        // Navigate back to dashboard
+        this.navigateTo('dashboard');
     }
 
     async loadView(view) {
