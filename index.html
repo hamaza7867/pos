@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Universal POS - Complete offline point of sale software for all types of stores">
+  <meta name="theme-color" content="#6366f1">
+  
+  <title>Universal POS - Point of Sale System</title>
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Icons -->
+  <link rel="icon" type="image/png" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icon-512.png">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/receipt-templates.css">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- App Container -->
+  <div class="app-container">
+    
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-content">
+        <div class="app-logo">
+          <div class="logo-icon">🛒</div>
+          <span>Universal POS</span>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-ghost" id="themeToggle" style="color: white;">
+            <span id="themeIcon">🌙</span>
+          </button>
+        </div>
+      </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="app-main" id="mainContent">
+      <!-- Dashboard View (Default) -->
+      <div id="dashboardView" class="view active">
+        <h1>Dashboard</h1>
+        
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-2 grid-lg-cols-4 mb-lg">
+          <div class="card stat-card">
+            <div class="stat-icon" style="background: var(--primary);">💰</div>
+            <div class="stat-content">
+              <div class="stat-label">Today's Sales</div>
+              <div class="stat-value" id="todaySales">$0.00</div>
+            </div>
+          </div>
+          
+          <div class="card stat-card">
+            <div class="stat-icon" style="background: var(--success);">📦</div>
+            <div class="stat-content">
+              <div class="stat-label">Products</div>
+              <div class="stat-value" id="totalProducts">0</div>
+            </div>
+          </div>
+          
+          <div class="card stat-card">
+            <div class="stat-icon" style="background: var(--accent);">👥</div>
+            <div class="stat-content">
+              <div class="stat-label">Customers</div>
+              <div class="stat-value" id="totalCustomers">0</div>
+            </div>
+          </div>
+          
+          <div class="card stat-card">
+            <div class="stat-icon" style="background: var(--warning);">📊</div>
+            <div class="stat-content">
+              <div class="stat-label">Transactions</div>
+              <div class="stat-value" id="totalTransactions">0</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Quick Actions</h2>
+          </div>
+          <div class="card-body">
+            <div class="grid grid-cols-2 grid-lg-cols-4 gap-md">
+              <button class="btn btn-primary btn-lg" onclick="navigateTo('pos')">
+                🛒 New Sale
+              </button>
+              <button class="btn btn-secondary btn-lg" onclick="navigateTo('products')">
+                📦 Products
+              </button>
+              <button class="btn btn-success btn-lg" onclick="navigateTo('customers')">
+                👥 Customers
+              </button>
+              <button class="btn btn-warning btn-lg" onclick="navigateTo('reports')">
+                📊 Reports
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Recent Sales -->
+        <div class="card mt-lg">
+          <div class="card-header">
+            <h2 class="card-title">Recent Sales</h2>
+            <button class="btn btn-sm btn-ghost" onclick="navigateTo('reports')">View All</button>
+          </div>
+          <div class="card-body" id="recentSales">
+            <p class="text-center text-secondary">No sales yet</p>
+          </div>
+        </div>
+        
+        <!-- Low Stock Alert -->
+        <div class="card mt-lg">
+          <div class="card-header">
+            <h2 class="card-title">Low Stock Alert</h2>
+          </div>
+          <div class="card-body" id="lowStockItems">
+            <p class="text-center text-secondary">All items in stock</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Other views will be loaded dynamically -->
+      <div id="dynamicView" class="view"></div>
+    </main>
+    
+    <!-- Bottom Navigation (Mobile) -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-view="dashboard" onclick="navigateTo('dashboard')">
+        <span class="icon">🏠</span>
+        <span>Home</span>
+      </button>
+      <button class="nav-item" data-view="pos" onclick="navigateTo('pos')">
+        <span class="icon">🛒</span>
+        <span>POS</span>
+      </button>
+      <button class="nav-item" data-view="products" onclick="navigateTo('products')">
+        <span class="icon">📦</span>
+        <span>Products</span>
+      </button>
+      <button class="nav-item" data-view="reports" onclick="navigateTo('reports')">
+        <span class="icon">📊</span>
+        <span>Reports</span>
+      </button>
+      <button class="nav-item" data-view="settings" onclick="navigateTo('settings')">
+        <span class="icon">⚙️</span>
+        <span>Settings</span>
+      </button>
+    </nav>
+    
+  </div>
+  
+  <!-- Install Prompt (PWA) -->
+  <div id="installPrompt" class="hidden" style="position: fixed; bottom: 80px; left: 1rem; right: 1rem; z-index: 999;">
+    <div class="card" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
+      <div class="card-body">
+        <h3 style="color: white; margin-bottom: 0.5rem;">Install Universal POS</h3>
+        <p style="color: rgba(255,255,255,0.9); margin-bottom: 1rem; font-size: 0.875rem;">
+          Install this app on your device for quick access and offline use.
+        </p>
+        <div class="flex gap-sm">
+          <button class="btn btn-ghost" style="color: white; border-color: white;" onclick="dismissInstallPrompt()">
+            Not Now
+          </button>
+          <button class="btn" style="background: white; color: var(--primary);" onclick="installApp()">
+            Install
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Scripts -->
+  <script src="js/db.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/products.js"></script>
+  <script src="js/customers.js"></script>
+  <script src="js/pos.js"></script>
+  <script src="js/reports.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/receipt-engine.js"></script>
+  <script src="js/receipt-templates.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
