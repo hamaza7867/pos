@@ -1,0 +1,194 @@
+/* Receipt Templates Styles */
+
+/* Base Receipt Styles */
+.receipt {
+    background: white;
+    color: black;
+    font-family: 'Courier New', monospace;
+    line-height: 1.4;
+    padding: 1rem;
+}
+
+.receipt * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.receipt p {
+    margin-bottom: 0.25rem;
+}
+
+.receipt h1,
+.receipt h2,
+.receipt h3 {
+    margin-bottom: 0.5rem;
+}
+
+/* Thermal 58mm */
+.thermal-58 {
+    max-width: 58mm;
+    font-size: 11px;
+}
+
+.thermal-58 h1 {
+    font-size: 16px;
+}
+
+.thermal-58 h2 {
+    font-size: 14px;
+}
+
+.thermal-58 table {
+    font-size: 10px;
+}
+
+/* Thermal 80mm */
+.thermal-80 {
+    max-width: 80mm;
+    font-size: 12px;
+}
+
+.thermal-80 h1 {
+    font-size: 18px;
+}
+
+.thermal-80 h2 {
+    font-size: 16px;
+}
+
+/* A4 Receipts */
+.a4-invoice,
+.a4-formal {
+    background: white;
+    font-family: Arial, sans-serif;
+}
+
+/* Receipt Sections */
+.receipt-header {
+    margin-bottom: 1rem;
+}
+
+.receipt-info {
+    margin-bottom: 1rem;
+}
+
+.receipt-info p {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+}
+
+.receipt-divider {
+    border-top: 1px dashed #000;
+    margin: 0.75rem 0;
+}
+
+.receipt-divider-bold {
+    border-top: 2px solid #000;
+    margin: 0.75rem 0;
+}
+
+/* Receipt Items Table */
+.receipt-items {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 0.75rem;
+}
+
+.receipt-items th {
+    text-align: left;
+    border-bottom: 1px solid #000;
+    padding: 0.25rem 0;
+    font-weight: bold;
+}
+
+.receipt-items td {
+    padding: 0.25rem 0;
+    border-bottom: 1px dashed #ccc;
+}
+
+.receipt-items tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Receipt Total */
+.receipt-total {
+    margin-bottom: 1rem;
+}
+
+.receipt-total p {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+}
+
+.receipt-total .total-line {
+    font-weight: bold;
+    font-size: 1.2em;
+    padding-top: 0.5rem;
+    border-top: 1px solid #000;
+    margin-top: 0.5rem;
+}
+
+/* Receipt Footer */
+.receipt-footer {
+    margin-top: 1rem;
+}
+
+/* Text Alignment */
+.text-left {
+    text-align: left !important;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+.text-right {
+    text-align: right !important;
+}
+
+.text-sm {
+    font-size: 0.875em;
+}
+
+/* Premium Receipt Specific */
+.receipt-premium {
+    font-family: Arial, sans-serif;
+}
+
+/* Print Styles */
+@media print {
+    .receipt {
+        margin: 0;
+        padding: 0;
+    }
+
+    .thermal-58,
+    .thermal-80 {
+        max-width: none;
+    }
+
+    @page {
+        margin: 0;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+    }
+}
+
+/* Thermal Printer Specific */
+@media print and (max-width: 58mm) {
+    .receipt {
+        font-size: 10px;
+    }
+}
+
+@media print and (max-width: 80mm) {
+    .receipt {
+        font-size: 11px;
+    }
+}
